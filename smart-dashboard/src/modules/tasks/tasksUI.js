@@ -1,37 +1,65 @@
+import { dataService } from "../../core/dataService.js";
 import { getMainContainer } from "../../core/uiContainer.js";
-import { getTasks, addTask, completeTask } from "./tasks.js";
+import { notify } from "../../core/notificationService.js";
 
-export function renderTasksUI() {
+export async function renderTasksUI() {
   const container = getMainContainer();
-  const tasks = getTasks();
-  
-  container.innerHTML = `
-    <div class="tasks-container">
-      <h2 class="tasks-header">📌 Мои задачи</h2>
-      <div class="tasks-form">
-        <input type="text" id="taskInput" class="tasks-input" placeholder="Что нужно сделать?">
-        <button id="addBtn" class="tasks-add-btn">Добавить</button>
+  container.innerHTML = `<h2 class="loading">Загрузка...</h2>`;
+
+  try {
+    const tasks = await dataService.getTasks();
+    container.innerHTML = `
+      <div class="task-page">
+        <h2>✅ Мои задачи</h2>
+        <div class="input-row">
+          <input type="text" id="new-task" placeholder="Добавить новую задачу...">
+          <button id="add-btn">Добавить</button>
+        </div>
+        <ul class="task-list">
+          ${tasks.map(t => `
+            <li class="task-item ${t.is_completed ? 'done' : ''}">
+              <input type="checkbox" class="complete-btn" data-id="${t.id}" ${t.is_completed ? 'checked disabled' : ''}>
+              <span class="text">${t.title}</span>
+              <div class="actions">
+                <button class="edit-btn" data-id="${t.id}" data-title="${t.title}">✏️</button>
+                <button class="del-btn" data-id="${t.id}">✕</button>
+              </div>
+            </li>
+          `).join('')}
+        </ul>
       </div>
-      <ul class="tasks-list">
-        ${tasks.map(t => `
-          <li class="task-item ${t.completed ? 'completed' : ''}">
-            <div class="task-info">
-              <span>${t.title}</span>
-              <span class="task-points">${t.points} pts</span>
-            </div>
-            ${t.completed ? '<span>✅</span>' : `<button class="task-complete-btn" data-id="${t.id}">Выполнить</button>`}
-          </li>
-        `).join('')}
-      </ul>
-    </div>
-  `;
+    `;
 
-  document.getElementById("addBtn").onclick = () => {
-    const val = document.getElementById("taskInput").value;
-    if(val) { addTask({title: val}); renderTasksUI(); }
-  };
+    document.getElementById("add-btn").onclick = async () => {
+      const val = document.getElementById("new-task").value;
+      if (val) { await dataService.createTask(val); notify("Задача создана!"); renderTasksUI(); }
+    };
 
-  container.querySelectorAll('.task-complete-btn').forEach(btn => {
-    btn.onclick = () => { completeTask(Number(btn.dataset.id)); renderTasksUI(); };
-  });
+    container.querySelectorAll(".complete-btn").forEach(btn => {
+      btn.onchange = async () => {
+        await dataService.completeTask(btn.dataset.id, true);
+        notify("+10 очков!");
+        renderTasksUI();
+      };
+    });
+
+    container.querySelectorAll(".edit-btn").forEach(btn => {
+      btn.onclick = async () => {
+        const newTitle = prompt("Редактировать задачу:", btn.dataset.title);
+        if (newTitle && newTitle !== btn.dataset.title) {
+          await dataService.updateTask(btn.dataset.id, newTitle);
+          notify("Обновлено");
+          renderTasksUI();
+        }
+      };
+    });
+
+    container.querySelectorAll(".del-btn").forEach(btn => {
+      btn.onclick = async () => {
+        await dataService.deleteTask(btn.dataset.id);
+        notify("Удалено", "error");
+        renderTasksUI();
+      };
+    });
+  } catch (err) { container.innerHTML = "Ошибка связи с сервером"; }
 }

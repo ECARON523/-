@@ -1,37 +1,21 @@
 import { initRouter } from "./core/router.js";
 import { initUI } from "./core/uiContainer.js";
+import { authService } from "./core/authService.js";
 
-// Точка входа приложения
-function initApp() {
-  console.log("App started");
+// Выставляем функции в глобальную область (для консоли)
+window.registerUser = async (email, password) => {
+  const res = await authService.register(email, password);
+  console.log("Ответ сервера (регистрация):", res);
+};
 
-  // Инициализация UI (создание базовой структуры)
-  initUI();
-
-  // Инициализация роутера (переключение между модулями)
-  initRouter();
-
-  // Регистрация Service Worker (для PWA)
-  registerServiceWorker();
-}
-
-// Регистрация Service Worker
-function registerServiceWorker() {
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker
-        .register("/src/serviceWorker.js")
-        .then(registration => {
-          console.log("Service Worker registered:", registration);
-        })
-        .catch(error => {
-          console.error("Service Worker registration failed:", error);
-        });
-    });
-  } else {
-    console.log("Service Worker not supported");
-  }
-}
+window.loginUser = async (email, password) => {
+  const res = await authService.login(email, password);
+  console.log("Ответ сервера (вход):", res);
+};
 
 // Запуск приложения
-initApp();
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("🚀 App started");
+  initUI();
+  initRouter();
+});

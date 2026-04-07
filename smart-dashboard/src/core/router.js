@@ -1,41 +1,48 @@
+import { authService } from "./authService.js";
+import { getMainContainer, initUI } from "./uiContainer.js";
+
 let routes = {};
 let defaultRoute = "/tasks";
 
 export function initRouter() {
-  // Теперь здесь функции, которые возвращают промис
   routes = {
-    "/tasks": () => import("../modules/tasks/tasksUI.js").then(mod => {
-      // Пробуем вызвать либо именованный экспорт, либо default
-      const func = mod.renderTasksUI || mod.default;
-      return func();
-    }),
-    "/notes": () => import("../modules/notes/notesUI.js").then(mod => {
-      const func = mod.renderNotesUI || mod.default;
-      return func();
-    }),
-    "/tracker": () => import("../modules/tracker/trackerUI.js").then(mod => {
-      const func = mod.renderTrackerUI || mod.default;
-      return func();
-    })
+    "/tasks": () => import("../modules/tasks/tasksUI.js").then(m => (m.renderTasksUI || m.default)()),
+    "/notes": () => import("../modules/notes/notesUI.js").then(m => (m.renderNotesUI || m.default)()),
+    "/tracker": () => import("../modules/tracker/trackerUI.js").then(m => (m.renderTrackerUI || m.default)())
   };
 
-  window.addEventListener("popstate", handleRoute);
+  // Слушаем изменение хеша в URL
+  window.addEventListener("hashchange", handleRoute);
   handleRoute();
 }
 
 export function navigate(path) {
-  window.history.pushState({}, "", path);
-  handleRoute();
+  window.location.hash = `#${path}`;
 }
 
 async function handleRoute() {
-  const path = window.location.pathname;
-  const route = routes[path] ? path : defaultRoute;
-  
-  // Добавляем await, чтобы дождаться загрузки модуля
-  try {
-    await routes[route]();
-  } catch (err) {
-    console.error("Ошибка загрузки модуля:", err);
+  // Если не авторизован — принудительно показываем UI входа и не идем дальше
+  if (!authService.isLoggedIn()) {
+    initUI(); 
+    return;
+  }
+
+  // Получаем путь из хеша (например из #/tasks получаем /tasks)
+  const hashPath = window.location.hash.replace("#", "") || defaultRoute;
+  const routeFunc = routes[hashPath];
+
+  if (routeFunc) {
+    const container = getMainContainer();
+    if (container) container.innerHTML = "Загрузка модуля...";
+    
+    try {
+      await routeFunc();
+    } catch (err) {
+      console.error("Ошибка загрузки модуля:", err);
+      if (getMainContainer()) getMainContainer().innerHTML = "Ошибка загрузки модуля.";
+    }
+  } else {
+    // Если путь не найден — на дефолт
+    navigate(defaultRoute);
   }
 }
