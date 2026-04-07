@@ -1,18 +1,28 @@
 import { getMainContainer } from "../../core/uiContainer.js";
-import { getNotes, deleteNote, addNote } from "./notes.js";
+import { getNotes, addNote, deleteNote } from "./notes.js";
 
 export function renderNotesUI() {
   const container = getMainContainer();
   const notes = getNotes();
+  
   container.innerHTML = `
-    <h2>Заметки</h2>
-    <input id="nTitle" placeholder="Заголовок"><input id="nContent" placeholder="Текст">
-    <button id="addNoteBtn">Добавить</button>
-    <div>${notes.map(n => `
-      <div style="border:1px solid #444; margin:10px; padding:10px;">
-        <h3>${n.title}</h3><p>${n.content}</p>
-        <button class="del-btn" data-id="${n.id}">Удалить</button>
-      </div>`).join('')}</div>
+    <div class="notes-container">
+      <h2 class="notes-header">📝 Мои Заметки</h2>
+      <div class="notes-form">
+        <input id="nTitle" class="notes-input" placeholder="Заголовок заметки">
+        <input id="nContent" class="notes-input" placeholder="Текст заметки...">
+        <button id="addNoteBtn" class="notes-add-btn">Сохранить заметку</button>
+      </div>
+      <div class="notes-grid">
+        ${notes.map(n => `
+          <div class="note-card">
+            <h3 class="note-title">${n.title}</h3>
+            <p class="note-content">${n.content}</p>
+            <button class="note-del-btn" data-id="${n.id}">Удалить</button>
+          </div>
+        `).join('')}
+      </div>
+    </div>
   `;
 
   document.getElementById("addNoteBtn").onclick = () => {
@@ -20,7 +30,7 @@ export function renderNotesUI() {
     renderNotesUI();
   };
 
-  container.querySelectorAll('.del-btn').forEach(btn => {
+  container.querySelectorAll('.note-del-btn').forEach(btn => {
     btn.onclick = () => { deleteNote(Number(btn.dataset.id)); renderNotesUI(); };
   });
 }

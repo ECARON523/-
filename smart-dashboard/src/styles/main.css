@@ -1,0 +1,8 @@
+body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #121212; color: #ffffff; margin: 0; padding: 0; }
+#app { display: flex; flex-direction: column; min-height: 100vh; }
+header { background-color: #1e1e1e; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; }
+header h1 { margin: 0; font-size: 1.5rem; color: #bb86fc; }
+nav { display: flex; gap: 10px; }
+nav button { background-color: transparent; color: #e0e0e0; border: 1px solid #bb86fc; padding: 8px 16px; border-radius: 20px; cursor: pointer; transition: 0.3s; font-weight: bold; }
+nav button:hover, nav button:active { background-color: #bb86fc; color: #121212; }
+main { padding: 20px; flex-grow: 1; }

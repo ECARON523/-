@@ -6,16 +6,24 @@ export function renderTasksUI() {
   const tasks = getTasks();
   
   container.innerHTML = `
-    <h2>Мои задачи</h2>
-    <input type="text" id="taskInput" placeholder="Новая задача">
-    <button id="addBtn">Добавить</button>
-    <ul>
-      ${tasks.map(t => `
-        <li>${t.title} (${t.points} pts) 
-          ${t.completed ? '✅' : `<button class="done-btn" data-id="${t.id}">Выполнить</button>`}
-        </li>
-      `).join('')}
-    </ul>
+    <div class="tasks-container">
+      <h2 class="tasks-header">📌 Мои задачи</h2>
+      <div class="tasks-form">
+        <input type="text" id="taskInput" class="tasks-input" placeholder="Что нужно сделать?">
+        <button id="addBtn" class="tasks-add-btn">Добавить</button>
+      </div>
+      <ul class="tasks-list">
+        ${tasks.map(t => `
+          <li class="task-item ${t.completed ? 'completed' : ''}">
+            <div class="task-info">
+              <span>${t.title}</span>
+              <span class="task-points">${t.points} pts</span>
+            </div>
+            ${t.completed ? '<span>✅</span>' : `<button class="task-complete-btn" data-id="${t.id}">Выполнить</button>`}
+          </li>
+        `).join('')}
+      </ul>
+    </div>
   `;
 
   document.getElementById("addBtn").onclick = () => {
@@ -23,7 +31,7 @@ export function renderTasksUI() {
     if(val) { addTask({title: val}); renderTasksUI(); }
   };
 
-  container.querySelectorAll('.done-btn').forEach(btn => {
+  container.querySelectorAll('.task-complete-btn').forEach(btn => {
     btn.onclick = () => { completeTask(Number(btn.dataset.id)); renderTasksUI(); };
   });
 }
