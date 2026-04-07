@@ -8,5 +8,6 @@ export function renderTrackerUI() {
     <ul>
       ${leaderboard.map(p => `<li>${p.name}: ${p.points} очков</li>`).join('')}
     </ul>
+    <button onclick="location.reload()">Обновить рейтинг</button>
   `;
 }
