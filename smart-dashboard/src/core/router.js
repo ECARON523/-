@@ -4,9 +4,19 @@ let defaultRoute = "/tasks";
 export function initRouter() {
   // Теперь здесь функции, которые возвращают промис
   routes = {
-    "/tasks": () => import("../modules/tasks/tasksUI.js").then(mod => mod.renderTasksUI()),
-    "/notes": () => import("../modules/notes/notesUI.js").then(mod => mod.renderNotesUI()),
-    "/tracker": () => import("../modules/tracker/trackerUI.js").then(mod => mod.renderTrackerUI())
+    "/tasks": () => import("../modules/tasks/tasksUI.js").then(mod => {
+      // Пробуем вызвать либо именованный экспорт, либо default
+      const func = mod.renderTasksUI || mod.default;
+      return func();
+    }),
+    "/notes": () => import("../modules/notes/notesUI.js").then(mod => {
+      const func = mod.renderNotesUI || mod.default;
+      return func();
+    }),
+    "/tracker": () => import("../modules/tracker/trackerUI.js").then(mod => {
+      const func = mod.renderTrackerUI || mod.default;
+      return func();
+    })
   };
 
   window.addEventListener("popstate", handleRoute);
