@@ -28,7 +28,7 @@ app.use("/api/notes", noteRoutes);
 app.use("/api/leaderboard", leaderboardRoutes);
 
 // ВАЖНО: Если юзер обновит страницу не на корне, отдаем index.html (для SPA)
-app.get('(.*)', (req, res) => {
+app.use((req, res, next) => {
     // Если запрос не к API, отдаем главную страницу
     if (!req.path.startsWith('/api')) {
         res.sendFile(path.join(__dirname, '../public/index.html'));
