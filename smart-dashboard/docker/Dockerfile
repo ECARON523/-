@@ -4,12 +4,12 @@ FROM nginx:alpine
 # Удаляем стандартный контент nginx
 RUN rm -rf /usr/share/nginx/html/*
 
-# Копируем public и src в контейнер
-COPY public /usr/share/nginx/html/public
-COPY src /usr/share/nginx/html/src
+# Копируем public и src (используем ../ чтобы выйти из папки docker)
+COPY ../public /usr/share/nginx/html/public
+COPY ../src /usr/share/nginx/html/src
 
 # Копируем конфиг nginx
-COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
+COPY ../nginx/nginx.conf /etc/nginx/conf.d/default.conf
 
 # Экспонируем порт
 EXPOSE 3000
