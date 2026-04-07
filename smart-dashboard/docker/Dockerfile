@@ -1,18 +1,11 @@
-# Базовый образ nginx
+# В Dockerfile (внутри папки docker) напиши так:
 FROM nginx:alpine
-
-# Удаляем стандартный контент nginx
 RUN rm -rf /usr/share/nginx/html/*
 
-# Копируем public и src (используем ../ чтобы выйти из папки docker)
-COPY ../public /usr/share/nginx/html/public
-COPY ../src /usr/share/nginx/html/src
+# Теперь Docker видит корень, поэтому пишем просто public, а не ../public
+COPY public /usr/share/nginx/html/public
+COPY src /usr/share/nginx/html/src
+COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
 
-# Копируем конфиг nginx
-COPY ../nginx/nginx.conf /etc/nginx/conf.d/default.conf
-
-# Экспонируем порт
 EXPOSE 3000
-
-# Запуск nginx в фоновом режиме
 CMD ["nginx", "-g", "daemon off;"]
