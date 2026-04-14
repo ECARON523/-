@@ -8,10 +8,11 @@ export function initRouter() {
   routes = {
     "/tasks": () => import("../modules/tasks/tasksUI.js").then(m => (m.renderTasksUI || m.default)()),
     "/notes": () => import("../modules/notes/notesUI.js").then(m => (m.renderNotesUI || m.default)()),
-    "/tracker": () => import("../modules/tracker/trackerUI.js").then(m => (m.renderTrackerUI || m.default)())
+    "/tracker": () => import("../modules/tracker/trackerUI.js").then(m => (m.renderTrackerUI || m.default)()),
+    "/leaderboard": () => import("../modules/leaderboard/leaderboardUI.js").then(m => (m.renderLeaderboardUI || m.default)()),
+    "/profile": () => import("../modules/profile/profileUI.js").then(m => (m.renderProfileUI || m.default)())
   };
 
-  // Слушаем изменение хеша в URL
   window.addEventListener("hashchange", handleRoute);
   handleRoute();
 }
@@ -21,19 +22,17 @@ export function navigate(path) {
 }
 
 async function handleRoute() {
-  // Если не авторизован — принудительно показываем UI входа и не идем дальше
   if (!authService.isLoggedIn()) {
     initUI(); 
     return;
   }
 
-  // Получаем путь из хеша (например из #/tasks получаем /tasks)
   const hashPath = window.location.hash.replace("#", "") || defaultRoute;
   const routeFunc = routes[hashPath];
 
   if (routeFunc) {
     const container = getMainContainer();
-    if (container) container.innerHTML = "Загрузка модуля...";
+    if (container) container.innerHTML = `<h2 style="text-align:center; margin-top:50px; color:var(--text-sec);">Загрузка...</h2>`;
     
     try {
       await routeFunc();
@@ -42,7 +41,6 @@ async function handleRoute() {
       if (getMainContainer()) getMainContainer().innerHTML = "Ошибка загрузки модуля.";
     }
   } else {
-    // Если путь не найден — на дефолт
     navigate(defaultRoute);
   }
 }

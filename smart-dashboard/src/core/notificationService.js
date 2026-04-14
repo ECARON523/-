@@ -1,4 +1,5 @@
 export const notify = (text, type = "success") => {
+  // 1. ТВОЙ КРАСИВЫЙ TOAST (визуальный эффект)
   const toast = document.createElement("div");
   toast.innerText = text;
   toast.style = `
@@ -15,4 +16,19 @@ export const notify = (text, type = "success") => {
     toast.style.transform = "translateX(100px)";
     setTimeout(() => toast.remove(), 500); 
   }, 3000);
+
+  // 2. ДОБАВЛЯЕМ СИСТЕМНЫЙ PUSH (для уведомления в шторке)
+  if ("Notification" in window && Notification.permission === "granted") {
+    new Notification("Smart Dashboard", {
+      body: text,
+      icon: "/icons/icon-192x192.png"
+    });
+  }
+};
+
+// Функция для запроса прав (вызови её в main.js один раз при старте)
+export const requestNotificationPermission = async () => {
+  if ("Notification" in window && Notification.permission === "default") {
+    await Notification.requestPermission();
+  }
 };

@@ -3,65 +3,60 @@ import { getMainContainer } from "../../core/uiContainer.js";
 
 export async function renderTrackerUI() {
   const container = getMainContainer();
-  container.innerHTML = `<h2 class="loading">Загрузка рейтинга...</h2>`;
-
   try {
     const tasks = await dataService.getTasks();
-    const leaderboard = await dataService.getLeaderboard();
-    
-    const completed = tasks.filter(t => t.is_completed).length;
-    const total = tasks.length;
-    const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+    const stats = calculateWeekly(tasks);
 
     container.innerHTML = `
-      <div class="tracker-page">
-        <h2>📊 Твой прогресс</h2>
-        <div class="progress-box">
-          <div class="bar-bg"><div class="bar-fill" style="width: ${percent}%"></div></div>
-          <p>${percent}% выполнено (${completed} из ${total})</p>
+      <h2 style="font-weight:800; margin-bottom:20px;">📊 Мой прогресс</h2>
+      
+      <div class="card" style="text-align:center;">
+        <h3 style="margin-bottom:20px; font-size:16px;">Статистика дня</h3>
+        <div class="circle-chart" style="background: conic-gradient(#48bb78 ${stats.percent * 3.6}deg, var(--border) 0deg);">
+          <div class="circle-inner">${stats.percent}%</div>
         </div>
+        <p style="text-align:center; font-weight:800; font-size:14px; color:var(--text-sec); margin:0;">
+          ${stats.completed} из ${stats.total} задач выполнено
+        </p>
+      </div>
 
-        <div class="stats-row">
-          <div class="leaderboard-card">
-            <h3>🏆 Лидерборд</h3>
-            <table>
-              ${leaderboard.map((u, i) => `
-                <tr>
-                  <td>${i + 1}</td>
-                  <td>${u.email.split('@')[0]}</td>
-                  <td><b>${u.points}</b></td>
-                </tr>
-              `).join('')}
-            </table>
-          </div>
-          <div class="chart-card">
-             <h3>📈 Активность</h3>
-             <canvas id="trackerChart"></canvas>
-          </div>
+      <div class="card">
+        <h3 style="margin:0 0 15px 0; font-size:16px;">Активность за неделю</h3>
+        <div class="bar-chart">
+          ${stats.days.map(d => `
+            <div class="bar-column">
+              <div class="bar-fill" style="height: ${Math.max(d.count * 25, 4)}px;"></div>
+              <span class="bar-label">${d.label}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- НАШ НОВЫЙ МАСКОТ -->
+      <div class="motivation-box" style="margin-top:30px; display:flex; align-items:center; gap:15px; padding-bottom:20px;">
+        <div class="mascot-avatar" style="width:60px; height:60px; background:#4299e1; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:30px; box-shadow: 0 4px 10px rgba(66, 153, 225, 0.3);">
+          ⚡
+        </div>
+        <div class="bubble" style="background:var(--card); padding:15px; border-radius:20px; border-bottom-left-radius:0; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border:1px solid var(--border); flex:1;">
+          <p style="margin:0; font-weight:700; font-style:italic; font-size:14px; line-height:1.4;">
+            "Эй, чемпион! Твой успех состоит из маленьких шагов, которые ты делаешь прямо сейчас. Не смей останавливаться, ты на правильном пути!"
+          </p>
         </div>
       </div>
     `;
-
-    initChart(completed, total - completed);
-
-  } catch (err) { container.innerHTML = "Ошибка загрузки данных"; }
+  } catch (err) { container.innerHTML = "Ошибка данных"; }
 }
 
-function initChart(done, pending) {
-  const setup = () => {
-    new Chart(document.getElementById('trackerChart'), {
-      type: 'doughnut',
-      data: {
-        labels: ['Завершено', 'В процессе'],
-        datasets: [{ data: [done, pending], backgroundColor: ['#4caf50', '#333'], borderWidth: 0 }]
-      },
-      options: { plugins: { legend: { display: false } }, cutout: '70%' }
-    });
-  };
-  if (!window.Chart) {
-    const s = document.createElement("script");
-    s.src = "https://cdn.jsdelivr.net/npm/chart.js";
-    s.onload = setup;
-    document.head.appendChild(s);
-  } else { setup(); }
+function calculateWeekly(tasks) {
+  const days = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+  const weekData = [];
+  const now = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(now.getDate() - i);
+    const dateStr = d.toISOString().split('T')[0];
+    const count = tasks.filter(t => t.is_completed && t.created_at.startsWith(dateStr)).length;
+    weekData.push({ label: days[d.getDay()], count: count });
+  }
+  const done = tasks.filter(t => t.is_completed).length;
+  return { completed: done, total: tasks.length, percent: tasks.length > 0 ? Math.round((done / tasks.length) * 100) : 0, days: weekData };
 }
