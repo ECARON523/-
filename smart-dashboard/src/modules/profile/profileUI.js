@@ -13,30 +13,40 @@ export async function renderProfileUI() {
     const email = localStorage.getItem("userEmail") || "user@email.com";
     const theme = document.documentElement.getAttribute("data-theme");
 
+    // Динамические достижения
+    const milestones = [5, 25, 100, 500, 1000, 5000, 10000];
+    const nextMilestone = milestones.find(m => m > completed) || 10000;
+    const progressPercent = Math.min((completed / nextMilestone) * 100, 100);
+
     container.innerHTML = `
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
         <h1 style="margin:0; font-weight:800;">Профиль</h1>
         <div style="display:flex; gap:10px;">
-          <button id="t-toggle" class="card" style="margin:0; padding:10px; width:45px;">${theme === 'light' ? '🌙' : '☀️'}</button>
+          <button id="t-toggle" class="card" style="margin:0; padding:10px; width:45px; cursor:pointer;">${theme === 'light' ? '🌙' : '☀️'}</button>
           <button id="open-name-modal" class="btn-primary" style="width:auto; padding:10px 20px;">Редактировать</button>
         </div>
       </div>
+      
       <div class="card" style="text-align:center; padding:30px;">
         <div style="width:70px; height:70px; background:var(--bg); border-radius:50%; margin:0 auto 15px; display:flex; align-items:center; justify-content:center; font-size:30px;">👤</div>
         <h2 style="margin:0;">${name}</h2>
         <p style="color:var(--text-sec); margin-top:5px;">${email}</p>
       </div>
+
       <h3 style="font-weight:800; margin-top:25px;">Достижения</h3>
       <div class="card">
         <p style="margin:0 0 10px 0; font-weight:700;">Всего задач: <span style="color:var(--accent);">${completed}</span></p>
         <p style="margin:0 0 15px 0; font-weight:700;">Заметок: <span style="color:var(--accent);">${notes.length}</span></p>
-        <div style="height:10px; background:var(--bg); border-radius:5px; overflow:hidden;">
-          <div style="width:${Math.min((completed/5)*100, 100)}%; background:#48bb78; height:100%; transition:1s;"></div>
+        <div style="height:10px; background:var(--bg); border-radius:5px; overflow:hidden; margin-top:10px;">
+          <div style="width:${progressPercent}%; background:#48bb78; height:100%; transition:1s;"></div>
         </div>
-        <p style="font-size:12px; color:var(--text-sec); margin-top:10px;">Цель: 5 задач</p>
+        <p style="font-size:12px; color:var(--text-sec); margin-top:10px;">Цель: ${nextMilestone} задач</p>
       </div>
+
       <div class="ad-banner" style="border:none; background:linear-gradient(135deg, #667eea, #764ba2); color:#fff; opacity:1;">🚀 PRO СТАТУС<br><span style="font-size:9px;">Безлимитные облачные заметки</span></div>
-      <button id="logout" class="card" style="width:100%; color:var(--danger); font-weight:800; border:none; margin-top:20px;">Выйти из профиля</button>
+
+      <button id="logout" class="card" style="width:100%; color:var(--danger); font-weight:800; border:none; margin-top:20px; cursor:pointer;">Выйти из профиля</button>
+
       <div id="name-modal" class="modal-overlay">
         <div class="modal-card">
           <h3 class="modal-title">Ваше имя</h3>
@@ -54,7 +64,12 @@ export async function renderProfileUI() {
     document.getElementById("name-cancel").onclick = () => modal.style.display = "none";
     document.getElementById("name-save").onclick = () => {
       const val = document.getElementById("name-input").value;
-      if(val) { localStorage.setItem("userName", val); modal.style.display = "none"; notify("Имя успешно изменено!"); renderProfileUI(); }
+      if(val) { 
+        localStorage.setItem("userName", val); 
+        modal.style.display = "none"; 
+        notify("Имя изменено!");
+        renderProfileUI(); 
+      }
     };
 
     document.getElementById("t-toggle").onclick = () => {
@@ -65,5 +80,5 @@ export async function renderProfileUI() {
       renderProfileUI();
     };
     document.getElementById("logout").onclick = () => authService.logout();
-  } catch(e) { container.innerHTML = "Ошибка"; }
+  } catch(e) { container.innerHTML = "Ошибка профиля"; }
 }
